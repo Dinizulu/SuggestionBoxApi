@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SuggestionBoxApi.Data;
+using SuggestionBoxApi.Interfaces;
+using SuggestionBoxApi.Repositories;
 
 namespace SuggestionBoxApi
 {
@@ -13,6 +15,13 @@ namespace SuggestionBoxApi
 
             //Getting connection string
             builder.Services.AddDbContext<SuggboxContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("suggbox")));
+
+            //Registering all the repositories
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<UserRepository>();
+
+            //adding automapper
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
