@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using SuggestionBoxApi.Data;
+
 namespace SuggestionBoxApi
 {
     public class Program
@@ -7,6 +10,9 @@ namespace SuggestionBoxApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            //Getting connection string
+            builder.Services.AddDbContext<SuggboxContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("suggbox")));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
