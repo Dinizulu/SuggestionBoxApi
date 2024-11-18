@@ -9,5 +9,8 @@
         public DateTime? CreatedAt { get; set; }
 
         public string UserPassword { get; set; } = null!;
+
+        //Navigation property
+        public ICollection<SuggestionDto> Suggestions { get; set; }
     }
 }

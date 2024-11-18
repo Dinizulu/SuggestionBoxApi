@@ -17,8 +17,8 @@ namespace SuggestionBoxApi
             builder.Services.AddDbContext<SuggboxContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("suggbox")));
 
             //Registering all the repositories
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped(typeof(ISuggestionBoxRepository<>), typeof(SuggestionBoxRepository<>));
+            builder.Services.AddScoped(typeof(SuggestionBoxRepository<>));
 
             //adding automapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

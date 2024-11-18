@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SuggestionBoxApi.DTOs;
+using SuggestionBoxApi.Models;
 using SuggestionBoxApi.Repositories;
 
 namespace SuggestionBoxApi.Controllers
@@ -9,52 +11,69 @@ namespace SuggestionBoxApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserRepository _userRepository;
+        private SuggestionBoxRepository<User> _boxRepository;
+        private readonly IMapper _mapper;
 
-        public UserController(UserRepository userRepository)
+        public UserController(SuggestionBoxRepository<User> boxRepository, IMapper mapper)
         {
-            _userRepository = userRepository;
+            _boxRepository = boxRepository;
+            _mapper = mapper;
         }
 
         //Getting all users
         [HttpGet("Getting_all_users")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsersAsync()
+        public async Task<ActionResult> GetAllUsersAsync()
         {
-            var users = await _userRepository.GetAllUAsync();
-            return Ok(users);
+            var users =  await _boxRepository.GetAllAsync();
+            var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+            return Ok(userDtos);
         }
 
         //Geting a user by their unique id
         [HttpGet("Get_by_id")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
-            var user = await _userRepository.GetUserByIdAsync(id);
+            var user = await _boxRepository.GetByIdAsync(id);
             if(user == null)
             {
-                return NotFound($"User with id: {id} is not registered");
+                return NotFound($"User with id: {id} is not registered/contained");
             }
-            return Ok(user);
+
+            var userDto = _mapper.Map<UserDto>(user);
+            return Ok(userDto);
         }
 
         //Adding a user
         [HttpPost("Adding_a_user")]
-        public async Task<ActionResult<UserDto>> AddingYserAsync(UserDto user)
+        public async Task<ActionResult<UserDto>> AddingUserAsync(UserDto user)
         {
             if(!ModelState.IsValid)
             {
                 return BadRequest("Empty fields are not allowed");
             }
-            await _userRepository.AddUserAsync(user);
-            await _userRepository.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser), new {id = user.UserId}, user);
+            var userDto = _mapper.Map<User>(user);
+            await _boxRepository.AddAsync(userDto);
+            return CreatedAtAction(nameof(AddingUserAsync), new {id = user.UserId}, userDto);
+        }
+
+        //
+        [HttpPut("Updating_a_user")]
+        public async Task<IActionResult> UpdateUserAsync(int id, UserDto user)
+        {
+            if(id != user.UserId)
+            {
+                return BadRequest();
+            }
+            var userToUpdate = _mapper.Map<User>(user);
+            await _boxRepository.UpdateAsync(userToUpdate);
+            return Ok(userToUpdate);
         }
 
         //Deleting a user
         [HttpDelete("Delete_a_user")]
         public async Task<ActionResult> DeleteUserAsync(int id)
         {
-            await _userRepository.DeleteUserAsync(id);
-            await _userRepository.SaveChangesAsync();
+            await _boxRepository.DeleteAsync(id);
             return Ok($"User with id: {id} has been deleted");
         }
     }

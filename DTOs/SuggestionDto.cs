@@ -1,4 +1,6 @@
-﻿namespace SuggestionBoxApi.DTOs
+﻿using SuggestionBoxApi.Models;
+
+namespace SuggestionBoxApi.DTOs
 {
     public class SuggestionDto
     {
@@ -13,5 +15,6 @@
         public DateTime? SubmittedAt { get; set; }
 
         public bool IsAnonymous { get; set; }
+        public ICollection<FeedbackDto> feedbackDtos { get; set; }
     }
 }
