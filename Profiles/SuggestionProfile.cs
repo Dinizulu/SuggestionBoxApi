@@ -9,6 +9,7 @@ namespace SuggestionBoxApi.Profiles
         public SuggestionProfile()
         {
             CreateMap<Suggestion,SuggestionDto>().ReverseMap();
+            CreateMap<Suggestion, CreateSuggestionDto>().ReverseMap();
         }
     }
 }

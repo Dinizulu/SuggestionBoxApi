@@ -45,22 +45,22 @@ namespace SuggestionBoxApi.Controllers
 
         //Adding a user
         [HttpPost("Adding_a_user")]
-        public async Task<ActionResult<UserDto>> AddingUserAsync(UserDto user)
+        public async Task<ActionResult<CreateUserDto>> AddingUserAsync(CreateUserDto user)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest("Empty fields are not allowed");
             }
             var userDto = _mapper.Map<User>(user);
             await _boxRepository.AddAsync(userDto);
-            return CreatedAtAction(nameof(AddingUserAsync), new {id = user.UserId}, userDto);
+            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, userDto);
         }
 
-        //
+        //Updating existing user
         [HttpPut("Updating_a_user")]
-        public async Task<IActionResult> UpdateUserAsync(int id, UserDto user)
+        public async Task<IActionResult> UpdateUserAsync(int id, CreateUserDto user)
         {
-            if(id != user.UserId)
+            if (id != user.UserId)
             {
                 return BadRequest();
             }

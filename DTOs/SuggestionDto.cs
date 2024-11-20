@@ -17,4 +17,13 @@ namespace SuggestionBoxApi.DTOs
         public bool IsAnonymous { get; set; }
         public ICollection<FeedbackDto> feedbackDtos { get; set; }
     }
+
+    public class CreateSuggestionDto
+    {
+        public int SuggestionId { get; set; }
+        public int? UserId { get; set; }
+        public string SuggestionText { get; set; } = null!;
+        public DateTime? SubmittedAt { get; set; }
+        public bool IsAnonymous { get; set; }
+    }
 }

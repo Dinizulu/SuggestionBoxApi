@@ -11,4 +11,12 @@ namespace SuggestionBoxApi.Profiles
             CreateMap<User, UserDto>().ReverseMap();
         }
     }
+
+    public class CreateUserProfile : Profile
+    {
+        public CreateUserProfile()
+        {
+            CreateMap<User, CreateUserDto>().ReverseMap();
+        }
+    }
 }
