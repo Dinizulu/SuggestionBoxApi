@@ -13,5 +13,7 @@ public partial class User
 
     public string UserPassword { get; set; } = null!;
 
+    public string Role { get; set; } = string.Empty;
+
     public virtual ICollection<Suggestion> Suggestions { get; set; } = new List<Suggestion>();
 }

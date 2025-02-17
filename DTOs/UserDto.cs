@@ -17,11 +17,9 @@
     public class CreateUserDto
     {
         public int UserId { get; set; }
-
         public string? Email { get; set; }
-
+        public string Role { get; set; } = string.Empty;
         public DateTime? CreatedAt { get; set; }
-
         public string UserPassword { get; set; } = null!;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SuggestionBoxApi.Data;
 using SuggestionBoxApi.Interfaces;
+using SuggestionBoxApi.Models.JWT;
 using SuggestionBoxApi.Repositories;
 using SuggestionBoxApi.Services;
 
@@ -21,12 +22,15 @@ namespace SuggestionBoxApi
             builder.Services.AddDbContext<SuggboxContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("suggbox")));
 
             //Additing Jwt authentication pipeline
+            var jwtsettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            builder.Services.AddSingleton(jwtsettings);
+            builder.Services.AddScoped<AuthService>();
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }
-            ).AddJwtBearer(options =>
+            }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -34,9 +38,9 @@ namespace SuggestionBoxApi
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-                    ValidAudience = builder.Configuration["JwtSettings:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecreteKey"]))
+                    ValidIssuer = jwtsettings.Issuer,
+                    ValidAudience = jwtsettings.Audience,
+                    IssuerSigningKey = jwtsettings.GetSymmetricSecurityKey()
                 };
             }
             );
@@ -44,7 +48,6 @@ namespace SuggestionBoxApi
             //Registering all the repositories
             builder.Services.AddScoped(typeof(ISuggestionBoxRepository<>), typeof(SuggestionBoxRepository<>));
             builder.Services.AddScoped(typeof(SuggestionBoxRepository<>));
-            builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
             //adding automapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
