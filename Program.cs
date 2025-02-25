@@ -1,10 +1,10 @@
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SuggestionBoxApi.Data;
 using SuggestionBoxApi.Interfaces;
-using SuggestionBoxApi.Models.JWT;
 using SuggestionBoxApi.Repositories;
 using SuggestionBoxApi.Services;
 
@@ -21,13 +21,16 @@ namespace SuggestionBoxApi
             //Getting connection string
             builder.Services.AddDbContext<SuggboxContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("suggbox")));
 
+            //Registering all the repositories
+            builder.Services.AddScoped(typeof(ISuggestionBoxRepository<>), typeof(SuggestionBoxRepository<>));
+            builder.Services.AddScoped(typeof(SuggestionBoxRepository<>));
+
             //Additing Jwt authentication pipeline
-            var jwtsettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-            builder.Services.AddSingleton(jwtsettings);
-            builder.Services.AddScoped<AuthService>();
+            var jwttSettings = builder.Configuration.GetSection("Jwt");
+            var key = Encoding.ASCII.GetBytes(jwttSettings["Key"]!);
 
             builder.Services.AddAuthentication(options =>
-            {
+            { 
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
@@ -38,16 +41,14 @@ namespace SuggestionBoxApi
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtsettings.Issuer,
-                    ValidAudience = jwtsettings.Audience,
-                    IssuerSigningKey = jwtsettings.GetSymmetricSecurityKey()
+                    ValidIssuer = jwttSettings["Issuer"],
+                    ValidAudience = jwttSettings["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
-            }
-            );
+            });
 
-            //Registering all the repositories
-            builder.Services.AddScoped(typeof(ISuggestionBoxRepository<>), typeof(SuggestionBoxRepository<>));
-            builder.Services.AddScoped(typeof(SuggestionBoxRepository<>));
+            builder.Services.AddAuthorization();
+            builder.Services.AddScoped<JwtService>();
 
             //adding automapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

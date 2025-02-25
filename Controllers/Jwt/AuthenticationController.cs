@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SuggestionBoxApi.Data;
@@ -15,47 +13,48 @@ namespace SuggestionBoxApi.Controllers.Jwt
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly AuthService _authenticationService;
+        private readonly JwtService _jwtService;
         private readonly SuggboxContext _context;
         private readonly IMapper _mapper;
 
-        public AuthenticationController(AuthService authenticationService, SuggboxContext context, IMapper mapper)
+        public AuthenticationController(JwtService jwtService, SuggboxContext context, IMapper mapper)
         {
-            _authenticationService = authenticationService;
+            _jwtService = jwtService;
             _context = context;
             _mapper = mapper;
         }
 
-        //Login endpoint
-        [HttpPost("Login")]
-        public async Task<IActionResult> Login(CreateUserDto ligingUser)
+        //Registering a user
+        [HttpPost("Register")]
+        public async Task<ActionResult> Register([FromBody] CreateUserDto user)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == ligingUser.Email && x.UserPassword == ligingUser.UserPassword);
-            if (user == null)
+            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
             {
-                return Unauthorized("Invalid credentials");
+                return BadRequest("User with this email already exists");
             }
 
-            var token = _authenticationService.GenerateToken(user);
-            return Ok(new {Token =  token});
+            user.UserPassword = BCrypt.Net.BCrypt.HashPassword(user.UserPassword);
+            user.CreatedAt = DateTime.Now;
+
+            var userToCreate = _mapper.Map<User>(user);
+            _context.Users.Add(userToCreate);
+            await _context.SaveChangesAsync();
+            return Ok("User registered successfully");
         }
 
-        //Register
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(CreateUserDto newUser)
+        //Logging in a user
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDto loginUser)
         {
-            if(await _context.Users.AnyAsync(x => x.Email == newUser.Email))
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == loginUser.Email);
+
+            if(user == null || !BCrypt.Net.BCrypt.Verify(loginUser.UserPassword, user.UserPassword))
             {
-                return Unauthorized("Email entered already registered");
+                return Unauthorized("Invalid email or password");
             }
 
-            newUser.CreatedAt = DateTime.Now;
-            newUser.Role = "User";
-
-            var userToRegister = _mapper.Map<User>(newUser);
-            _context.Users.Add(userToRegister);
-            await _context.SaveChangesAsync();
-            return Ok("Registered");
+            var token = _jwtService.GenerateToken(user);
+            return Ok(new {Token = token });
         }
     }
 }

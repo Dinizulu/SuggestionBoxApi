@@ -7,10 +7,6 @@ namespace SuggestionBoxApi.Data;
 
 public partial class SuggboxContext : DbContext
 {
-    public SuggboxContext()
-    {
-    }
-
     public SuggboxContext(DbContextOptions<SuggboxContext> options)
         : base(options)
     {
